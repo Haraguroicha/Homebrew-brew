@@ -8,4 +8,7 @@ cask "caffeine" do
   sha256 "d96b375d0eb01f6cbce1f49e70fa484facf8be0236350f677249bacb7fe9cb87"
 
   app "Caffeine.app"
+  conflicts_with cask: [
+    "homebrew/cask/caffeine"
+  ]
 end
