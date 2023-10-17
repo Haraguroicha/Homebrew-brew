@@ -4,8 +4,8 @@ cask "caffeine" do
   homepage "https://www.caffeine-app.net/"
   url "https://www.caffeine-app.net/download/"
 
-  version "1.2.2"
-  sha256 "a256120d17983c89de3bdacd97f3e84e488c9782e6b2365ced365593a29beee5"
+  version "1.4.1"
+  sha256 "d96b375d0eb01f6cbce1f49e70fa484facf8be0236350f677249bacb7fe9cb87"
 
   app "Caffeine.app"
 end
