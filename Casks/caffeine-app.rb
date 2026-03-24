@@ -11,8 +11,16 @@ cask "caffeine-app" do
     sha256 "201f3de57b11e1faec3307f00fb81ecab8ed2c433e94010de88b1edc4edbd15f"
   end
   on_sonoma do
-    version "1.4.1"
-    sha256 "d96b375d0eb01f6cbce1f49e70fa484facf8be0236350f677249bacb7fe9cb87"
+    version "1.4.3"
+    sha256 "5d1127fe3a5be772c61b9685915bd244b2e47b4607242b0d3b9cc517f5269c43"
+  end
+  on_sequoia do
+    version "1.5.3"
+    sha256 "91dcb16138f97d21a19e9dc62f41a7d4b1329728d7027da50ae61fca0db1d066"
+  end
+  on_tahoe do
+    version "1.6.3"
+    sha256 "0d9ff8bf1fdcf1b3a0b22cdc18e311d4d25c99a0adb411098c9f1597c11f6e15"
   end
 
   homepage "https://www.caffeine-app.net/?macos=#{MacOS.full_version.pretty_name.downcase}"
