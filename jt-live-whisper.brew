@@ -1,0 +1,2 @@
+cask 'blackhole-2ch' || true
+brew 'haraguroicha/brew/jt-live-whisper'
