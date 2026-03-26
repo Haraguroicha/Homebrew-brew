@@ -389,16 +389,24 @@ class JtLiveWhisper < Formula
           return dest
 
       def prefetch_whisper_cpp():
-          dest = ROOT / "whisper.cpp" / "models" / "ggml-large-v3-turbo.bin"
-          if dest.exists() and dest.stat().st_size > 0:
-              record("whisper_cpp_large_v3_turbo", "ok", "already present", dest)
-              return
-          url = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo.bin"
-          try:
-              fetch_url(url, dest)
-              record("whisper_cpp_large_v3_turbo", "ok", "downloaded", dest)
-          except Exception as e:
-              record("whisper_cpp_large_v3_turbo", "warn", repr(e), dest)
+          models = [
+              ("whisper_cpp_base", "ggml-base.bin", "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin"),
+              ("whisper_cpp_base_en", "ggml-base.en.bin", "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin"),
+              ("whisper_cpp_small", "ggml-small.bin", "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.bin"),
+              ("whisper_cpp_small_en", "ggml-small.en.bin", "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.en.bin"),
+              ("whisper_cpp_large_v3", "ggml-large-v3.bin", "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3.bin"),
+              ("whisper_cpp_large_v3_turbo", "ggml-large-v3-turbo.bin", "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo.bin"),
+          ]
+          for key, filename, url in models:
+              dest = ROOT / "whisper.cpp" / "models" / filename
+              if dest.exists() and dest.stat().st_size > 0:
+                  record(key, "ok", "already present", dest)
+                  continue
+              try:
+                  fetch_url(url, dest)
+                  record(key, "ok", "downloaded", dest)
+              except Exception as e:
+                  record(key, "warn", repr(e), dest)
 
       def prefetch_nllb():
           try:
