@@ -17,6 +17,7 @@ class JtLiveWhisper < Formula
   depends_on "git" => :build
   depends_on "pkgconf" => :build
   depends_on "rust" => :build
+  depends_on "uv" => :build
 
   on_macos do
     if MacOS.version < :ventura
@@ -47,9 +48,10 @@ class JtLiveWhisper < Formula
     end
 
     libexec.install Dir["*"]
-
-    requirements_file = buildpath/"requirements-homebrew.txt"
-    requirements_file.write(requirements_text)
+    deps_src = Pathname.new(__dir__) / "jt-live-whisper"
+    deps_dir = libexec / "deps"
+    deps_dir.rmtree if deps_dir.exist?
+    FileUtils.cp_r(deps_src, deps_dir)
 
     py = if OS.mac? && MacOS.version < :ventura
       Formula["python@3.11"].opt_bin/"python3.11"
@@ -60,9 +62,7 @@ class JtLiveWhisper < Formula
     ENV.prepend_path "PATH", ffmpeg_opt_bin if ffmpeg_opt_bin
     ENV["PYTHONNOUSERSITE"] = "1"
     ENV["HF_HUB_DISABLE_TELEMETRY"] = "1"
-    ENV["PIP_DISABLE_PIP_VERSION_CHECK"] = "1"
     # build C/Rust extensions from source to avoid non-relocatable wheels
-    ENV["PIP_NO_BINARY"] = "av,orjson,pydantic-core,tiktoken,watchfiles"
     if (ffmpeg_prefix = ffmpeg_opt_prefix)
       ENV.prepend_path "PKG_CONFIG_PATH", ffmpeg_prefix/"lib/pkgconfig"
       ENV.append "LDFLAGS", "-L#{ffmpeg_prefix}/lib"
@@ -71,14 +71,15 @@ class JtLiveWhisper < Formula
     ENV.append "LDFLAGS", "-Wl,-headerpad_max_install_names"
     ENV.append "RUSTFLAGS", "-C link-arg=-Wl,-headerpad_max_install_names"
 
-    #venv = virtualenv_create(libexec/"venv", py)
-    #venv.pip_install resources
-    #venv.pip_install_and_link buildpath
-    # Upstream repo is script-oriented rather than a Python package, so install deps via requirements.
-    system py, "-m", "venv", libexec/"venv"
-    system libexec/"venv/bin/python", "-m", "pip", "install", "--upgrade", "pip", "setuptools", "wheel"
-    system libexec/"venv/bin/python", "-m", "pip", "install", "-v", "-r", requirements_file
-    system libexec/"venv/bin/python", "-m", "pip", "check" # fail early if any deps are broken
+    ENV["UV_PROJECT_ENVIRONMENT"] = (libexec/"venv").to_s
+    sync_cmd = [
+      "uv", "sync",
+      "--python", py,
+      "--project", deps_dir,
+      "--no-dev",
+    ]
+    sync_cmd += ["--extra", "apple-silicon"] if OS.mac? && Hardware::CPU.arm?
+    system(*sync_cmd)
 
     (libexec/"logs").mkpath
     (libexec/"recordings").mkpath
@@ -191,38 +192,6 @@ class JtLiveWhisper < Formula
     Formula[name].any_version_installed?
   rescue FormulaUnavailableError
     false
-  end
-
-  def requirements_text
-    base = <<~EOS
-      --extra-index-url https://download.pytorch.org/whl/cpu
-      numpy
-      requests
-      tqdm
-      sounddevice
-      soundfile
-      pydub
-      opencc-python-reimplemented
-      fastapi
-      uvicorn[standard]
-      websockets
-      huggingface-hub
-      sentencepiece
-      argostranslate
-      faster-whisper
-      ctranslate2
-      orjson
-      pyqt6
-      resemblyzer
-      spectralcluster
-    EOS
-    extra = +""
-    if OS.mac? && Hardware::CPU.arm?
-      extra << "mlx\n"
-      extra << "mlx-whisper\n"
-      extra << "moonshine-voice\n"
-    end
-    base + extra
   end
 
   def var_dir
